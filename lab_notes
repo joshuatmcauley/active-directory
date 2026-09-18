@@ -1,0 +1,80 @@
+Northbridge High — Packet Tracer (fictional school LAN)
+Not the Ballymoney rack. Real 108S is unmanaged / one flat LAN.
+
+---
+What it is in real words
+A small school network: IT office, teachers, students on separate VLANs so kids cannot reach the IT server. One router does the routing between VLANs (router-on-a-stick). DHCP hands out addresses. An ACL is a firewall rule on the student side.
+
+---
+Kit in the sim
+R1 = 2911 router (the "core" / default gateway)
+SW-ACCESS = 2960 switch (classroom/office access switch)
+IT-PC, Staff-PC, Student-PC
+SRV1 = school file/AD stand-in, same VLAN as IT
+Did not build 40 suite PCs — one student PC stands in for the suite
+
+---
+Cables
+Straight-through copper
+IT-PC -> Fa0/1
+Staff-PC -> Fa0/2
+Student-PC -> Fa0/3
+SRV1 -> Fa0/4
+R1 Gi0/0 -> SW Gi0/1 (this one is the trunk)
+PCs/server went green first. R1 stayed red until no shutdown on Gi0/0.
+
+---
+Switch (access + trunk)
+VLAN 10 IT
+VLAN 20 STAFF
+VLAN 30 STUDENTS
+Access port = one VLAN only (like a wall socket in one department)
+Trunk = one cable carrying many VLANs (switch to router), 802.1Q tags
+Fa0/1 and Fa0/4 = VLAN 10
+Fa0/2 = VLAN 20
+Fa0/3 = VLAN 30
+Gi0/1 = trunk
+
+---
+Router-on-a-stick
+One physical port, subinterfaces:
+Gi0/0.10 = 192.168.10.1  VLAN 10
+Gi0/0.20 = 192.168.20.1  VLAN 20
+Gi0/0.30 = 192.168.30.1  VLAN 30
+.1 = default gateway for that VLAN
+DHCP pools IT / STAFF / STUDENTS, exclude .1
+PCs set to DHCP
+
+---
+Addresses we actually saw
+SRV1 started 0.0.0.0 (no lease) — ipconfig on a server is ipconfig not "ip config"
+Then DHCP: SRV1 = 192.168.10.3  gw 192.168.10.1
+Students = 192.168.30.x
+Staff = 192.168.20.x
+IT = 192.168.10.x
+
+---
+ACL (access control list = packet filter / basic firewall)
+On Gi0/0.30 in (traffic from students hitting the router)
+deny 192.168.30.0/24 -> 192.168.10.0/24
+permit anything else
+Staff on .20 not in that ACL so they can still reach IT
+
+Tests
+Student ping 192.168.30.1 = OK
+Student ping 192.168.10.1 = destination host unreachable (blocked)
+Student ping 192.168.10.3 SRV1 = blocked
+Staff ping 192.168.20.1 = OK
+Staff ping 192.168.10.1 = OK
+Staff ping 192.168.10.3 = OK (first ping sometimes times out = ARP)
+IT to SRV1 = same VLAN, does not use that ACL
+
+---
+Earlier PT lab (keep separate file)
+Staff/IoT two VLANs, ROAS, ACL IoT cannot hit Staff
+Forced fail: IoT-PC put in VLAN 10, got 192.168.10.3, put port back to 20
+
+---
+Windows AD lab (paused)
+Hyper-V DC01, lab.local, 192.168.10.10
+ADUC open. users.csv was empty. Script not run yet.
