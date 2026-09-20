@@ -58,9 +58,4 @@ Home lab on Hyper-V. Not a workplace domain. Built to practise first-line work: 
 - Typing a UNC path in Command Prompt is not the same as `dir` or Explorer
 - First ping to the DC failed; the second succeeded once the VM was reachable
 
-## What this is not
 
-- Not production
-- Not Microsoft Entra ID
-- Not Hyper-V as a job title
-- Not written helpdesk runbooks yet
